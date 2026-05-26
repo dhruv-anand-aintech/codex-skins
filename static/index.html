@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Codex Context Window</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --surface: #fffdf8;
+      --surface-2: #ebe6da;
+      --text: #1d2521;
+      --text-dim: #66716b;
+      --border: rgba(29, 37, 33, 0.13);
+      --amber: #d97706;
+      --emerald: #059669;
+      --teal: #0f766e;
+      --rose: #be123c;
+      --blue: #1e3a5f;
+      --shadow: 0 18px 50px rgba(29, 37, 33, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "IBM Plex Sans", ui-sans-serif, sans-serif;
+      background:
+        linear-gradient(rgba(29, 37, 33, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(29, 37, 33, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 10% 5%, rgba(217, 119, 6, 0.13), transparent 34rem),
+        radial-gradient(circle at 90% 0%, rgba(5, 150, 105, 0.12), transparent 32rem),
+        var(--bg);
+      background-size: 24px 24px, 24px 24px, auto, auto, auto;
+    }
+
+    main {
+      width: min(1320px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      padding: 22px;
+    }
+
+    .title {
+      font-size: clamp(34px, 5vw, 72px);
+      line-height: 0.95;
+      margin: 0 0 18px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      max-width: 720px;
+      color: var(--text-dim);
+      font-size: 17px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .stamp {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 24px;
+      color: var(--text-dim);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 0 5px rgba(5, 150, 105, 0.12);
+    }
+
+    .meter {
+      height: 28px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+    }
+
+    .segment {
+      height: 100%;
+      min-width: 1px;
+      transition: width 400ms ease;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .legend-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-dim);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex: 0 0 auto;
+      margin-top: 3px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      border: 1px solid var(--border);
+      background: rgba(255, 253, 248, 0.72);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .kpi .label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .kpi .value {
+      margin-top: 8px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+      gap: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+      white-space: normal;
+    }
+
+    th {
+      color: var(--text-dim);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .component-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      overflow: hidden;
+      min-width: 120px;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .budget {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .ring {
+      position: relative;
+      width: 150px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--amber) var(--skill-angle), var(--surface-2) 0);
+      border: 1px solid var(--border);
+    }
+
+    .ring::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .ring-value {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 1;
+      font-size: 27px;
+      font-weight: 700;
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--text-dim);
+      font-size: 12px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .disabled {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    canvas {
+      max-height: 280px;
+    }
+
+    @media (max-width: 920px) {
+      .hero, .grid, .kpis, .budget {
+        grid-template-columns: 1fr;
+      }
+
+      .legend {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="panel">
+        <div class="stamp"><span class="dot"></span><span id="status">Connecting</span></div>
+        <h1 class="title">Codex Context Window</h1>
+        <p class="sub">A live readout of the latest Codex rollout: window usage, cached input, skill manifest budget, conversation weight, and tool-call footprint.</p>
+      </div>
+      <div class="panel">
+        <div class="meter" id="meter"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <div class="kpi"><div class="label">Input Used</div><div class="value" id="inputUsed">-</div></div>
+      <div class="kpi"><div class="label">Window</div><div class="value" id="window">-</div></div>
+      <div class="kpi"><div class="label">Remaining</div><div class="value" id="remaining">-</div></div>
+      <div class="kpi"><div class="label">Cached Input</div><div class="value" id="cached">-</div></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Component Breakdown</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Tokens</th>
+              <th>% Window</th>
+              <th>% Input</th>
+              <th>Scale</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div class="side-stack">
+        <div class="panel">
+          <h2>Skills Budget</h2>
+          <div class="budget">
+            <div class="ring" id="skillRing"><div class="ring-value" id="skillPct">-</div></div>
+            <div>
+              <div class="mono" id="skillStats">-</div>
+              <div class="disabled" id="disabled"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Distribution</h2>
+          <canvas id="chart"></canvas>
+        </div>
+        <div class="panel">
+          <h2>Source</h2>
+          <div class="mono" id="source">-</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const colors = {
+      system: "#1e3a5f",
+      developer: "#d97706",
+      conversation: "#059669",
+      tools: "#0f766e",
+      output: "#be123c",
+      remaining: "#d8d2c4"
+    };
+
+    let chart;
+
+    const fmt = new Intl.NumberFormat();
+    const pct = value => `${value.toFixed(value < 10 ? 2 : 1)}%`;
+
+    function colorFor(component) {
+      return colors[component.kind] || colors.system;
+    }
+
+    function render(data) {
+      document.getElementById("status").textContent = `Live - updated ${new Date().toLocaleTimeString()}`;
+      document.getElementById("inputUsed").textContent = pct(data.used_pct_window);
+      document.getElementById("window").textContent = fmt.format(data.model_context_window);
+      document.getElementById("remaining").textContent = fmt.format(data.remaining_tokens);
+      document.getElementById("cached").textContent = fmt.format(data.cached_input_tokens);
+
+      const visible = data.components.filter(c => c.tokens > 0);
+      const meter = document.getElementById("meter");
+      meter.innerHTML = "";
+      visible.forEach(component => {
+        const seg = document.createElement("div");
+        seg.className = "segment";
+        seg.style.background = colorFor(component);
+        seg.style.width = `${Math.max(component.pct_window, 0.05)}%`;
+        seg.title = `${component.name}: ${fmt.format(component.tokens)} tokens`;
+        meter.appendChild(seg);
+      });
+      const rem = document.createElement("div");
+      rem.className = "segment";
+      rem.style.background = colors.remaining;
+      rem.style.width = `${Math.max(100 - data.used_pct_window, 0)}%`;
+      meter.appendChild(rem);
+
+      const grouped = Object.entries(colors).filter(([name]) => name !== "remaining");
+      document.getElementById("legend").innerHTML = grouped.map(([kind, color]) => `
+        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:${color}"></span>${kind}</span><span></span></div>
+      `).join("");
+
+      document.getElementById("rows").innerHTML = visible.map(component => `
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:${colorFor(component)}"></span>${component.name}</span></td>
+          <td>${fmt.format(component.tokens)}</td>
+          <td>${pct(component.pct_window)}</td>
+          <td>${pct(component.pct_input)}</td>
+          <td><div class="bar"><span style="width:${Math.min(component.pct_input, 100)}%;background:${colorFor(component)}"></span></div></td>
+        </tr>
+      `).join("");
+
+      const skillBudget = data.skills.pct_budget;
+      document.getElementById("skillRing").style.setProperty("--skill-angle", `${Math.min(skillBudget, 140) * 3.6}deg`);
+      document.getElementById("skillPct").textContent = pct(skillBudget);
+      document.getElementById("skillStats").innerHTML = `
+        ${fmt.format(data.skills.tokens)} skill tokens<br>
+        ${fmt.format(data.skills.budget_tokens)} token 2% budget<br>
+        ${pct(data.skills.pct_window)} of full window<br>
+        ${fmt.format(data.skills.entries)} available skill entries
+      `;
+      document.getElementById("disabled").innerHTML = data.skills.disabled.map(name => `<span class="pill">${name}</span>`).join("");
+      document.getElementById("source").innerHTML = `${data.rollout}<br>mtime ${data.rollout_mtime}`;
+
+      const labels = visible.map(c => c.name);
+      const values = visible.map(c => c.tokens);
+      const chartColors = visible.map(colorFor);
+      if (!chart) {
+        chart = new Chart(document.getElementById("chart"), {
+          type: "doughnut",
+          data: { labels, datasets: [{ data: values, backgroundColor: chartColors, borderWidth: 0 }] },
+          options: {
+            plugins: { legend: { display: false } },
+            cutout: "62%",
+            animation: { duration: 300 }
+          }
+        });
+      } else {
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = values;
+        chart.data.datasets[0].backgroundColor = chartColors;
+        chart.update();
+      }
+    }
+
+    async function refresh() {
+      const res = await fetch("/api/context", { cache: "no-store" });
+      render(await res.json());
+    }
+
+    refresh();
+    setInterval(refresh, 2500);
+  </script>
+</body>
+</html>
