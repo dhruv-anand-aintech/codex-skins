@@ -45,23 +45,50 @@ def path_for_session(session_id: str | None) -> Path | None:
 def session_meta(path: Path) -> dict[str, Any]:
     meta: dict[str, Any] = {}
     last_token_info: dict[str, Any] = {}
+    display_name = ""
+    name_source = "fallback"
     try:
         with path.open("r", encoding="utf-8") as fh:
             for line in fh:
-                event = json.loads(line)
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
                 if event.get("type") == "session_meta" and not meta:
                     meta = event.get("payload", {})
+                    for key in ("title", "name", "summary"):
+                        value = meta.get(key)
+                        if isinstance(value, str) and value.strip():
+                            display_name = clean_prompt_name(value)
+                            name_source = f"session_meta.{key}"
                 elif event.get("type") == "event_msg" and event.get("payload", {}).get("type") == "token_count":
                     last_token_info = event.get("payload", {}).get("info", {})
-    except (OSError, json.JSONDecodeError):
+                elif not display_name and event.get("type") == "response_item":
+                    payload = event.get("payload", {})
+                    if payload.get("type") == "message" and payload.get("role") == "user":
+                        text = text_from_content(payload.get("content"))
+                        if text and not is_bootstrap_prompt(text):
+                            display_name = clean_prompt_name(text)
+                            name_source = "first_user_prompt"
+                elif not display_name and event.get("type") == "turn_context":
+                    value = event.get("payload", {}).get("summary")
+                    if isinstance(value, str) and value.strip() and value != "auto":
+                        display_name = clean_prompt_name(value)
+                        name_source = "turn_context.summary"
+    except OSError:
         pass
 
     usage = last_token_info.get("last_token_usage", {})
+    cwd = meta.get("cwd") or ""
+    if not display_name:
+        display_name = Path(cwd).name or path.name
     return {
         "id": rollout_id(path),
+        "display_name": display_name,
+        "name_source": name_source,
         "file": path.name,
         "path": str(path),
-        "cwd": meta.get("cwd") or "",
+        "cwd": cwd,
         "started_at": meta.get("timestamp") or "",
         "mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
         "input_tokens": int(usage.get("input_tokens") or 0),
@@ -87,6 +114,18 @@ def text_from_content(content: Any) -> str:
                 parts.append(str(item))
         return "\n".join(part for part in parts if part)
     return ""
+
+
+def clean_prompt_name(text: str) -> str:
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > 92:
+        return f"{text[:89].rstrip()}..."
+    return text
+
+
+def is_bootstrap_prompt(text: str) -> bool:
+    stripped = text.lstrip()
+    return stripped.startswith("# AGENTS.md instructions") or stripped.startswith("<environment_context>")
 
 
 def classify_developer_block(text: str) -> str:

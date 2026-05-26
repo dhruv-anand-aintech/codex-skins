@@ -500,7 +500,8 @@
       const started = session.started_at ? new Date(session.started_at).toLocaleString() : session.mtime;
       const cwd = session.cwd ? session.cwd.replace(`${location.origin}`, "") : "unknown cwd";
       const tokens = session.input_tokens ? `${fmt.format(session.input_tokens)} input tokens` : "no token count";
-      return `${started} - ${tokens} - ${cwd}`;
+      const name = session.display_name || cwd;
+      return `${name} - ${started} - ${tokens} - ${cwd}`;
     }
 
     async function loadSessions() {
