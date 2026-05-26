@@ -87,6 +87,42 @@
       font-size: 12px;
     }
 
+    .session-picker {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    label {
+      color: var(--text-dim);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    select, button {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font: 500 14px "IBM Plex Sans", ui-sans-serif, sans-serif;
+      padding: 0 12px;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--blue);
+      color: #fffdf8;
+    }
+
     .dot {
       width: 9px;
       height: 9px;
@@ -287,7 +323,7 @@
     }
 
     @media (max-width: 920px) {
-      .hero, .grid, .kpis, .budget {
+      .hero, .grid, .kpis, .budget, .session-picker {
         grid-template-columns: 1fr;
       }
 
@@ -299,6 +335,16 @@
 </head>
 <body>
   <main>
+    <section class="panel session-picker">
+      <div class="field">
+        <label for="sessionSelect">Codex session</label>
+        <select id="sessionSelect">
+          <option value="latest">Latest live session</option>
+        </select>
+      </div>
+      <button id="reloadSessions" type="button">Reload Sessions</button>
+    </section>
+
     <section class="hero">
       <div class="panel">
         <div class="stamp"><span class="dot"></span><span id="status">Connecting</span></div>
@@ -369,6 +415,7 @@
     };
 
     let chart;
+    let selectedSession = "latest";
 
     const fmt = new Intl.NumberFormat();
     const pct = value => `${value.toFixed(value < 10 ? 2 : 1)}%`;
@@ -426,7 +473,7 @@
         ${fmt.format(data.skills.entries)} available skill entries
       `;
       document.getElementById("disabled").innerHTML = data.skills.disabled.map(name => `<span class="pill">${name}</span>`).join("");
-      document.getElementById("source").innerHTML = `${data.rollout}<br>mtime ${data.rollout_mtime}`;
+      document.getElementById("source").innerHTML = `${data.rollout}<br>session ${data.session_id}<br>mtime ${data.rollout_mtime}`;
 
       const labels = visible.map(c => c.name);
       const values = visible.map(c => c.tokens);
@@ -449,13 +496,53 @@
       }
     }
 
+    function sessionLabel(session) {
+      const started = session.started_at ? new Date(session.started_at).toLocaleString() : session.mtime;
+      const cwd = session.cwd ? session.cwd.replace(`${location.origin}`, "") : "unknown cwd";
+      const tokens = session.input_tokens ? `${fmt.format(session.input_tokens)} input tokens` : "no token count";
+      return `${started} - ${tokens} - ${cwd}`;
+    }
+
+    async function loadSessions() {
+      const res = await fetch("/api/sessions?limit=50", { cache: "no-store" });
+      const data = await res.json();
+      const select = document.getElementById("sessionSelect");
+      const previous = select.value || selectedSession;
+      select.replaceChildren();
+      const latest = document.createElement("option");
+      latest.value = "latest";
+      latest.textContent = "Latest live session";
+      select.appendChild(latest);
+      data.sessions.forEach(session => {
+        const option = document.createElement("option");
+        option.value = session.id;
+        option.textContent = sessionLabel(session);
+        select.appendChild(option);
+      });
+      if ([...select.options].some(option => option.value === previous)) {
+        select.value = previous;
+      }
+      selectedSession = select.value;
+    }
+
     async function refresh() {
-      const res = await fetch("/api/context", { cache: "no-store" });
+      const query = selectedSession && selectedSession !== "latest" ? `?session=${encodeURIComponent(selectedSession)}` : "";
+      const res = await fetch(`/api/context${query}`, { cache: "no-store" });
       render(await res.json());
     }
 
-    refresh();
+    document.getElementById("sessionSelect").addEventListener("change", event => {
+      selectedSession = event.target.value;
+      refresh();
+    });
+    document.getElementById("reloadSessions").addEventListener("click", async () => {
+      await loadSessions();
+      refresh();
+    });
+
+    loadSessions().then(refresh);
     setInterval(refresh, 2500);
+    setInterval(loadSessions, 15000);
   </script>
 </body>
 </html>

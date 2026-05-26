@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import tiktoken
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -20,9 +20,53 @@ app = FastAPI(title="Codex Context Window Visualizer")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
+def rollout_files() -> list[Path]:
+    return sorted(SESSION_ROOT.glob("**/rollout-*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+
 def latest_rollout() -> Path | None:
-    files = sorted(SESSION_ROOT.glob("**/rollout-*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+    files = rollout_files()
     return files[0] if files else None
+
+
+def rollout_id(path: Path) -> str:
+    return path.stem.removeprefix("rollout-")
+
+
+def path_for_session(session_id: str | None) -> Path | None:
+    if not session_id or session_id == "latest":
+        return latest_rollout()
+    for path in rollout_files():
+        if rollout_id(path) == session_id or path.name == session_id:
+            return path
+    return None
+
+
+def session_meta(path: Path) -> dict[str, Any]:
+    meta: dict[str, Any] = {}
+    last_token_info: dict[str, Any] = {}
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                event = json.loads(line)
+                if event.get("type") == "session_meta" and not meta:
+                    meta = event.get("payload", {})
+                elif event.get("type") == "event_msg" and event.get("payload", {}).get("type") == "token_count":
+                    last_token_info = event.get("payload", {}).get("info", {})
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    usage = last_token_info.get("last_token_usage", {})
+    return {
+        "id": rollout_id(path),
+        "file": path.name,
+        "path": str(path),
+        "cwd": meta.get("cwd") or "",
+        "started_at": meta.get("timestamp") or "",
+        "mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
+        "input_tokens": int(usage.get("input_tokens") or 0),
+        "model_context_window": int(last_token_info.get("model_context_window") or 0),
+    }
 
 
 def token_count(text: str) -> int:
@@ -152,6 +196,7 @@ def summarize_session(path: Path) -> dict[str, Any]:
     skill_budget_tokens = round(window * 0.02) if window else 0
 
     return {
+        "session_id": rollout_id(path),
         "rollout": str(path),
         "rollout_mtime": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
         "model_context_window": window,
@@ -179,8 +224,14 @@ def index() -> FileResponse:
 
 
 @app.get("/api/context")
-def context() -> dict[str, Any]:
-    path = latest_rollout()
+def context(session: str | None = Query(default=None)) -> dict[str, Any]:
+    path = path_for_session(session)
     if path is None:
-        return {"error": f"No Codex rollout files found under {SESSION_ROOT}"}
+        return {"error": f"No matching Codex rollout found under {SESSION_ROOT}"}
     return summarize_session(path)
+
+
+@app.get("/api/sessions")
+def sessions(limit: int = Query(default=30, ge=1, le=200)) -> dict[str, Any]:
+    items = [session_meta(path) for path in rollout_files()[:limit]]
+    return {"sessions": items, "latest": items[0]["id"] if items else None}
