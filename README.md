@@ -9,6 +9,10 @@ Codex appearance skins plus a small public-safe screenshot generator.
 ./skins/win98.sh
 ```
 
+### Purple Gradient Preview
+
+![Purple gradient Codex skin preview](public-assets/codex-context-window-mock.png)
+
 Both scripts patch `/Applications/Codex.app` by default. Pass a different app path as the first argument:
 
 ```sh

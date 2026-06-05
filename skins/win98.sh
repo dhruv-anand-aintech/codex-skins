@@ -552,102 +552,38 @@ button.w-token-button-composer-sm,
   min-height: 12px !important;
 }}
 
-[class*="composer"],
-[class*="prompt"],
-form:has([contenteditable="true"]),
-form:has([role="textbox"]),
-[role="form"]:has([contenteditable="true"]),
-[role="form"]:has([role="textbox"]) {{
-  overflow: visible !important;
-  max-height: none !important;
-  min-height: max-content !important;
-  height: auto !important;
-  padding-bottom: 4px !important;
+.main-surface [class*="thread-content-max-width"]:has([contenteditable="true"]),
+.main-surface [class*="thread-content-max-width"]:has([role="textbox"]),
+.browser-main-surface [class*="thread-content-max-width"]:has([contenteditable="true"]),
+.browser-main-surface [class*="thread-content-max-width"]:has([role="textbox"]),
+[class*="max-w-3xl"]:has([contenteditable="true"]),
+[class*="max-w-3xl"]:has([role="textbox"]) {{
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
 }}
 
-[class*="composer"] [class*="toolbar"],
-[class*="composer"] [role="toolbar"],
-[class*="prompt"] [class*="toolbar"],
-[class*="prompt"] [role="toolbar"],
-form:has([contenteditable="true"]) [class*="toolbar"],
-form:has([role="textbox"]) [class*="toolbar"] {{
-  min-height: 27px !important;
-  height: auto !important;
-  overflow: visible !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  align-content: center !important;
-  row-gap: 2px !important;
+.main-surface :is(.sticky, .fixed, .absolute):has([contenteditable="true"]),
+.main-surface :is(.sticky, .fixed, .absolute):has([role="textbox"]),
+.browser-main-surface :is(.sticky, .fixed, .absolute):has([contenteditable="true"]),
+.browser-main-surface :is(.sticky, .fixed, .absolute):has([role="textbox"]) {{
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
 }}
 
-[class*="composer"] *,
-[class*="prompt"] *,
-form:has([contenteditable="true"]) *,
-form:has([role="textbox"]) * {{
-  align-self: center !important;
+.main-surface :has(> [data-above-composer-portal]),
+.browser-main-surface :has(> [data-above-composer-portal]) {{
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
 }}
 
-[class*="composer"] button,
-[class*="composer"] [role="button"],
-[class*="prompt"] button,
-[class*="prompt"] [role="button"],
-form:has([contenteditable="true"]) button,
-form:has([role="textbox"]) button {{
-  min-width: auto !important;
-  min-height: 21px !important;
-  height: 21px !important;
-  max-height: 21px !important;
-  aspect-ratio: auto !important;
-  padding: 1px 7px 2px !important;
-  line-height: 15px !important;
-  flex: 0 0 auto !important;
-  overflow: hidden !important;
-}}
-
-[class*="composer"] button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-[class*="composer"] [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-[class*="prompt"] button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-[class*="prompt"] [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-form:has([contenteditable="true"]) button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-form:has([contenteditable="true"]) [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-form:has([role="textbox"]) button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
-form:has([role="textbox"]) [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))) {{
-  width: 24px !important;
-  min-width: 24px !important;
-  max-width: 24px !important;
-  padding: 1px !important;
-}}
-
-form:has([contenteditable="true"]) button svg,
-form:has([contenteditable="true"]) [role="button"] svg,
-form:has([role="textbox"]) button svg,
-form:has([role="textbox"]) [role="button"] svg {{
-  width: 12px !important;
-  height: 12px !important;
-  min-width: 12px !important;
-  min-height: 12px !important;
-}}
-
-[class*="composer"] [contenteditable="true"],
-[class*="composer"] [role="textbox"],
-[class*="prompt"] [contenteditable="true"],
-[class*="prompt"] [role="textbox"],
-form:has([contenteditable="true"]) [contenteditable="true"],
-form:has([role="textbox"]) [role="textbox"] {{
-  align-self: stretch !important;
-  min-height: 21px !important;
-  height: auto !important;
-  max-height: 7rem !important;
-  overflow-y: auto !important;
-}}
-
-[class*="composer"] button:active,
-[class*="composer"] [role="button"]:active,
-[class*="prompt"] button:active,
-[class*="prompt"] [role="button"]:active,
-form:has([contenteditable="true"]) button:active,
-form:has([role="textbox"]) button:active {{
-  padding: 3px 7px 2px 9px !important;
+[data-above-composer-portal],
+[data-above-composer-queue-portal] {{
+  width: 100% !important;
+  max-width: none !important;
 }}
 
 svg,
@@ -771,7 +707,7 @@ if [[ -f "$INFO_PLIST" ]]; then
   /usr/libexec/PlistBuddy -c "Set :ElectronAsarIntegrity:Resources/app.asar:hash $HASH" "$INFO_PLIST" 2>/dev/null || true
 fi
 
-if command -v codesign >/dev/null 2>&1; then
+if [[ "${CODEX_SKIP_CODESIGN:-0}" != "1" ]] && command -v codesign >/dev/null 2>&1; then
   codesign --force --deep --sign - "$APP_PATH" >/dev/null 2>&1 || true
 fi
 
