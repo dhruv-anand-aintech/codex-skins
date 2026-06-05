@@ -83,6 +83,10 @@ override = f"""
   --win98-caption-height: 18px;
   --win98-menu-height: 20px;
   --win98-control-size: 16px;
+  --spacing-token-button-composer: 24px !important;
+  --spacing-token-button-composer-sm: 21px !important;
+  --spacing-token-button-composer-gap: 2px !important;
+  --h-token-button-composer-gap: 2px !important;
   --font-sans: Tahoma, "MS Sans Serif", "Microsoft Sans Serif", Arial, sans-serif !important;
   --font-mono: "Lucida Console", "Courier New", monospace !important;
   --vscode-font-family: Tahoma, "MS Sans Serif", "Microsoft Sans Serif", Arial, sans-serif !important;
@@ -514,6 +518,40 @@ input[type="checkbox"],
   padding: 2px 4px !important;
 }}
 
+.size-token-button-composer,
+.h-token-button-composer,
+.h-token-button-composer-sm,
+.w-token-button-composer-sm,
+button.size-token-button-composer,
+button.h-token-button-composer,
+button.h-token-button-composer-sm,
+button.w-token-button-composer-sm,
+[role="button"].size-token-button-composer,
+[role="button"].h-token-button-composer,
+[role="button"].h-token-button-composer-sm,
+[role="button"].w-token-button-composer-sm {{
+  width: var(--spacing-token-button-composer-sm) !important;
+  min-width: var(--spacing-token-button-composer-sm) !important;
+  max-width: var(--spacing-token-button-composer-sm) !important;
+  height: var(--spacing-token-button-composer-sm) !important;
+  min-height: var(--spacing-token-button-composer-sm) !important;
+  max-height: var(--spacing-token-button-composer-sm) !important;
+  padding: 1px !important;
+  flex: 0 0 auto !important;
+  aspect-ratio: auto !important;
+  overflow: hidden !important;
+}}
+
+.size-token-button-composer svg,
+.h-token-button-composer svg,
+.h-token-button-composer-sm svg,
+.w-token-button-composer-sm svg {{
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+}}
+
 [class*="composer"],
 [class*="prompt"],
 form:has([contenteditable="true"]),
@@ -542,6 +580,13 @@ form:has([role="textbox"]) [class*="toolbar"] {{
   row-gap: 2px !important;
 }}
 
+[class*="composer"] *,
+[class*="prompt"] *,
+form:has([contenteditable="true"]) *,
+form:has([role="textbox"]) * {{
+  align-self: center !important;
+}}
+
 [class*="composer"] button,
 [class*="composer"] [role="button"],
 [class*="prompt"] button,
@@ -549,12 +594,51 @@ form:has([role="textbox"]) [class*="toolbar"] {{
 form:has([contenteditable="true"]) button,
 form:has([role="textbox"]) button {{
   min-width: auto !important;
-  min-height: 23px !important;
-  height: 23px !important;
-  max-height: 23px !important;
-  padding: 2px 8px 3px !important;
-  line-height: 16px !important;
+  min-height: 21px !important;
+  height: 21px !important;
+  max-height: 21px !important;
+  aspect-ratio: auto !important;
+  padding: 1px 7px 2px !important;
+  line-height: 15px !important;
   flex: 0 0 auto !important;
+  overflow: hidden !important;
+}}
+
+[class*="composer"] button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+[class*="composer"] [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+[class*="prompt"] button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+[class*="prompt"] [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+form:has([contenteditable="true"]) button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+form:has([contenteditable="true"]) [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+form:has([role="textbox"]) button:has(svg):not(:has(span)):not(:has(div:not(:empty))),
+form:has([role="textbox"]) [role="button"]:has(svg):not(:has(span)):not(:has(div:not(:empty))) {{
+  width: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  padding: 1px !important;
+}}
+
+form:has([contenteditable="true"]) button svg,
+form:has([contenteditable="true"]) [role="button"] svg,
+form:has([role="textbox"]) button svg,
+form:has([role="textbox"]) [role="button"] svg {{
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+}}
+
+[class*="composer"] [contenteditable="true"],
+[class*="composer"] [role="textbox"],
+[class*="prompt"] [contenteditable="true"],
+[class*="prompt"] [role="textbox"],
+form:has([contenteditable="true"]) [contenteditable="true"],
+form:has([role="textbox"]) [role="textbox"] {{
+  align-self: stretch !important;
+  min-height: 21px !important;
+  height: auto !important;
+  max-height: 7rem !important;
+  overflow-y: auto !important;
 }}
 
 [class*="composer"] button:active,
