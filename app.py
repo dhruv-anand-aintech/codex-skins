@@ -257,13 +257,86 @@ def summarize_session(path: Path) -> dict[str, Any]:
     }
 
 
+def mock_summary() -> dict[str, Any]:
+    window = 200_000
+    input_tokens = 96_420
+    output_tokens = 3_870
+    reasoning_tokens = 8_240
+    cached_tokens = 41_500
+    components = [
+        {"name": "Base Instructions", "tokens": 4_920, "kind": "system"},
+        {"name": "Developer Runtime Rules", "tokens": 18_340, "kind": "developer"},
+        {"name": "Skills Manifest", "tokens": 12_780, "kind": "developer"},
+        {"name": "Memory Policy", "tokens": 9_460, "kind": "developer"},
+        {"name": "User Messages", "tokens": 21_900, "kind": "conversation"},
+        {"name": "Assistant Messages", "tokens": 13_560, "kind": "conversation"},
+        {"name": "Tool Calls + Outputs", "tokens": 15_460, "kind": "tools"},
+        {"name": "Current Output", "tokens": output_tokens, "kind": "output"},
+        {"name": "Reasoning Output", "tokens": reasoning_tokens, "kind": "output"},
+    ]
+    for component in components:
+        component["pct_window"] = component["tokens"] / window * 100
+        component["pct_input"] = component["tokens"] / input_tokens * 100
+
+    skill_budget_tokens = round(window * 0.02)
+    skills_tokens = 12_780
+    return {
+        "session_id": "mock-public-demo",
+        "rollout": "~/.codex/sessions/2026/06/05/rollout-mock-public-demo.jsonl",
+        "rollout_mtime": "2026-06-05T12:00:00",
+        "model_context_window": window,
+        "last_input_tokens": input_tokens,
+        "last_output_tokens": output_tokens,
+        "last_reasoning_tokens": reasoning_tokens,
+        "cached_input_tokens": cached_tokens,
+        "used_pct_window": input_tokens / window * 100,
+        "remaining_tokens": window - input_tokens,
+        "components": components,
+        "skills": {
+            "tokens": skills_tokens,
+            "entries": 68,
+            "budget_tokens": skill_budget_tokens,
+            "pct_budget": skills_tokens / skill_budget_tokens * 100,
+            "pct_window": skills_tokens / window * 100,
+            "disabled": ["legacy-calendar", "unused-browser"],
+        },
+    }
+
+
+def mock_sessions() -> dict[str, Any]:
+    return {
+        "sessions": [
+            {
+                "id": "mock-public-demo",
+                "display_name": "Public mock session for Codex skin preview",
+                "name_source": "mock",
+                "file": "rollout-mock-public-demo.jsonl",
+                "path": "~/.codex/sessions/2026/06/05/rollout-mock-public-demo.jsonl",
+                "cwd": "~/Code/sample-project",
+                "started_at": "2026-06-05T12:00:00",
+                "mtime": "2026-06-05T12:04:30",
+                "input_tokens": 96_420,
+                "model_context_window": 200_000,
+            }
+        ],
+        "latest": "mock-public-demo",
+    }
+
+
 @app.get("/")
 def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/mock")
+def mock_index() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
 @app.get("/api/context")
-def context(session: str | None = Query(default=None)) -> dict[str, Any]:
+def context(session: str | None = Query(default=None), mock: bool = Query(default=False)) -> dict[str, Any]:
+    if mock:
+        return mock_summary()
     path = path_for_session(session)
     if path is None:
         return {"error": f"No matching Codex rollout found under {SESSION_ROOT}"}
@@ -271,6 +344,8 @@ def context(session: str | None = Query(default=None)) -> dict[str, Any]:
 
 
 @app.get("/api/sessions")
-def sessions(limit: int = Query(default=30, ge=1, le=200)) -> dict[str, Any]:
+def sessions(limit: int = Query(default=30, ge=1, le=200), mock: bool = Query(default=False)) -> dict[str, Any]:
+    if mock:
+        return mock_sessions()
     items = [session_meta(path) for path in rollout_files()[:limit]]
     return {"sessions": items, "latest": items[0]["id"] if items else None}

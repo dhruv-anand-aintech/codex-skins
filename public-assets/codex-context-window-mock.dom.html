@@ -1,12 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Codex Context Window</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -338,30 +336,38 @@
     <section class="panel session-picker">
       <div class="field">
         <label for="sessionSelect">Codex session</label>
-        <select id="sessionSelect">
-          <option value="latest">Latest live session</option>
-        </select>
+        <select id="sessionSelect"><option value="latest">Public mock session</option><option value="mock-public-demo">Public mock session for Codex skin preview - 6/5/2026, 12:00:00 PM - 96,420 input tokens - ~/Code/sample-project</option></select>
       </div>
       <button id="reloadSessions" type="button">Reload Sessions</button>
     </section>
 
     <section class="hero">
       <div class="panel">
-        <div class="stamp"><span class="dot"></span><span id="status">Connecting</span></div>
+        <div class="stamp"><span class="dot"></span><span id="status">Mock data - public-safe preview</span></div>
         <h1 class="title">Codex Context Window</h1>
         <p class="sub">A live readout of the latest Codex rollout: window usage, cached input, skill manifest budget, conversation weight, and tool-call footprint.</p>
       </div>
       <div class="panel">
-        <div class="meter" id="meter"></div>
-        <div class="legend" id="legend"></div>
+        <div class="meter" id="meter"><div class="segment" title="Base Instructions: 4,920 tokens" style="background: rgb(30, 58, 95); width: 2.46%;"></div><div class="segment" title="Developer Runtime Rules: 18,340 tokens" style="background: rgb(217, 119, 6); width: 9.17%;"></div><div class="segment" title="Skills Manifest: 12,780 tokens" style="background: rgb(217, 119, 6); width: 6.39%;"></div><div class="segment" title="Memory Policy: 9,460 tokens" style="background: rgb(217, 119, 6); width: 4.73%;"></div><div class="segment" title="User Messages: 21,900 tokens" style="background: rgb(5, 150, 105); width: 10.95%;"></div><div class="segment" title="Assistant Messages: 13,560 tokens" style="background: rgb(5, 150, 105); width: 6.78%;"></div><div class="segment" title="Tool Calls + Outputs: 15,460 tokens" style="background: rgb(15, 118, 110); width: 7.73%;"></div><div class="segment" title="Current Output: 3,870 tokens" style="background: rgb(190, 18, 60); width: 1.935%;"></div><div class="segment" title="Reasoning Output: 8,240 tokens" style="background: rgb(190, 18, 60); width: 4.12%;"></div><div class="segment" style="background: rgb(216, 210, 196); width: 51.79%;"></div></div>
+        <div class="legend" id="legend">
+        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:#1e3a5f"></span>system</span><span></span></div>
+      
+        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:#d97706"></span>developer</span><span></span></div>
+      
+        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:#059669"></span>conversation</span><span></span></div>
+      
+        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:#0f766e"></span>tools</span><span></span></div>
+      
+        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:#be123c"></span>output</span><span></span></div>
+      </div>
       </div>
     </section>
 
     <section class="kpis">
-      <div class="kpi"><div class="label">Input Used</div><div class="value" id="inputUsed">-</div></div>
-      <div class="kpi"><div class="label">Window</div><div class="value" id="window">-</div></div>
-      <div class="kpi"><div class="label">Remaining</div><div class="value" id="remaining">-</div></div>
-      <div class="kpi"><div class="label">Cached Input</div><div class="value" id="cached">-</div></div>
+      <div class="kpi"><div class="label">Input Used</div><div class="value" id="inputUsed">48.2%</div></div>
+      <div class="kpi"><div class="label">Window</div><div class="value" id="window">200,000</div></div>
+      <div class="kpi"><div class="label">Remaining</div><div class="value" id="remaining">103,580</div></div>
+      <div class="kpi"><div class="label">Cached Input</div><div class="value" id="cached">41,500</div></div>
     </section>
 
     <section class="grid">
@@ -377,7 +383,79 @@
               <th>Scale</th>
             </tr>
           </thead>
-          <tbody id="rows"></tbody>
+          <tbody id="rows">
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#1e3a5f"></span>Base Instructions</span></td>
+          <td>4,920</td>
+          <td>2.46%</td>
+          <td>5.10%</td>
+          <td><div class="bar"><span style="width:5.102675793403858%;background:#1e3a5f"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#d97706"></span>Developer Runtime Rules</span></td>
+          <td>18,340</td>
+          <td>9.17%</td>
+          <td>19.0%</td>
+          <td><div class="bar"><span style="width:19.020950010371294%;background:#d97706"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#d97706"></span>Skills Manifest</span></td>
+          <td>12,780</td>
+          <td>6.39%</td>
+          <td>13.3%</td>
+          <td><div class="bar"><span style="width:13.254511512134412%;background:#d97706"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#d97706"></span>Memory Policy</span></td>
+          <td>9,460</td>
+          <td>4.73%</td>
+          <td>9.81%</td>
+          <td><div class="bar"><span style="width:9.81124248081311%;background:#d97706"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#059669"></span>User Messages</span></td>
+          <td>21,900</td>
+          <td>10.9%</td>
+          <td>22.7%</td>
+          <td><div class="bar"><span style="width:22.713130056004978%;background:#059669"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#059669"></span>Assistant Messages</span></td>
+          <td>13,560</td>
+          <td>6.78%</td>
+          <td>14.1%</td>
+          <td><div class="bar"><span style="width:14.063472308649658%;background:#059669"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#0f766e"></span>Tool Calls + Outputs</span></td>
+          <td>15,460</td>
+          <td>7.73%</td>
+          <td>16.0%</td>
+          <td><div class="bar"><span style="width:16.03401783862269%;background:#0f766e"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#be123c"></span>Current Output</span></td>
+          <td>3,870</td>
+          <td>1.93%</td>
+          <td>4.01%</td>
+          <td><div class="bar"><span style="width:4.013690105787181%;background:#be123c"></span></div></td>
+        </tr>
+      
+        <tr>
+          <td><span class="component-name"><span class="swatch" style="background:#be123c"></span>Reasoning Output</span></td>
+          <td>8,240</td>
+          <td>4.12%</td>
+          <td>8.55%</td>
+          <td><div class="bar"><span style="width:8.54594482472516%;background:#be123c"></span></div></td>
+        </tr>
+      </tbody>
         </table>
       </div>
 
@@ -385,20 +463,25 @@
         <div class="panel">
           <h2>Skills Budget</h2>
           <div class="budget">
-            <div class="ring" id="skillRing"><div class="ring-value" id="skillPct">-</div></div>
+            <div class="ring" id="skillRing" style="--skill-angle: 504deg;"><div class="ring-value" id="skillPct">319.5%</div></div>
             <div>
-              <div class="mono" id="skillStats">-</div>
-              <div class="disabled" id="disabled"></div>
+              <div class="mono" id="skillStats">
+        12,780 skill tokens<br>
+        4,000 token 2% budget<br>
+        6.39% of full window<br>
+        68 available skill entries
+      </div>
+              <div class="disabled" id="disabled"><span class="pill">legacy-calendar</span><span class="pill">unused-browser</span></div>
             </div>
           </div>
         </div>
         <div class="panel">
           <h2>Distribution</h2>
-          <canvas id="chart"></canvas>
+          <canvas id="chart" width="462" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 462px;"></canvas>
         </div>
         <div class="panel">
           <h2>Source</h2>
-          <div class="mono" id="source">-</div>
+          <div class="mono" id="source">~/.codex/sessions/2026/06/05/rollout-mock-public-demo.jsonl<br>session mock-public-demo<br>mtime 2026-06-05T12:00:00</div>
         </div>
       </div>
     </section>
@@ -551,5 +634,6 @@
     setInterval(refresh, 2500);
     setInterval(loadSessions, 15000);
   </script>
-</body>
-</html>
+
+
+</body></html>
