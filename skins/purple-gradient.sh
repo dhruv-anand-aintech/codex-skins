@@ -66,10 +66,46 @@ body {{
   background-color: #12091f !important;
 }}
 
-.main-surface:where(:is([data-codex-window-type=browser],[data-codex-window-type=chrome-extension],[data-codex-window-type=electron]) .main-surface),
-.browser-main-surface {{
-  background-color: color-mix(in srgb, var(--color-token-main-surface-primary) 88%, transparent) !important;
+[data-codex-window-type],
+.browser-main-surface,
+.main-surface,
+[class*="main-surface"],
+[class*="MainSurface"] {{
+  background: var(--codex-purple-gradient-background) fixed !important;
+  background-color: #12091f !important;
+}}
+
+[class*="surface"],
+[class*="Surface"],
+[class*="content"],
+[class*="Content"],
+[class*="page"],
+[class*="Page"] {{
+  background-color: transparent !important;
   backdrop-filter: blur(18px);
+}}
+
+aside,
+nav,
+[role="navigation"],
+[class*="sidebar"],
+[class*="Sidebar"] {{
+  background: color-mix(in srgb, #0a0214 58%, transparent) !important;
+  backdrop-filter: blur(18px);
+}}
+
+textarea,
+[contenteditable="true"],
+[class*="composer"],
+[class*="Composer"],
+[class*="prompt"],
+[class*="Prompt"] {{
+  background-color: color-mix(in srgb, #06020c 72%, transparent) !important;
+}}
+
+[class*="card"],
+[class*="Card"] {{
+  background-color: color-mix(in srgb, #080311 68%, transparent) !important;
 }}
 {marker_end}
 """.strip()
@@ -78,9 +114,8 @@ css = css_path.read_text()
 if marker_start in css and marker_end in css:
     before = css.split(marker_start, 1)[0].rstrip()
     after = css.split(marker_end, 1)[1].lstrip()
-    css = f"{before}\n{override}\n{after}"
-else:
-    css = f"{css.rstrip()}\n{override}\n"
+    css = f"{before}\n{after}".rstrip()
+css = f"{css.rstrip()}\n{override}\n"
 css_path.write_text(css)
 
 index = index_path.read_text()
