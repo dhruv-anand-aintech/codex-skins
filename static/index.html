@@ -299,6 +299,7 @@
       font-size: 12px;
       line-height: 1.55;
       overflow-wrap: anywhere;
+      white-space: pre-line;
     }
 
     .disabled {
@@ -452,31 +453,74 @@
       meter.appendChild(rem);
 
       const grouped = Object.entries(colors).filter(([name]) => name !== "remaining");
-      document.getElementById("legend").innerHTML = grouped.map(([kind, color]) => `
-        <div class="legend-item"><span style="display:flex;gap:8px;"><span class="swatch" style="background:${color}"></span>${kind}</span><span></span></div>
-      `).join("");
+      const legend = document.getElementById("legend");
+      legend.replaceChildren(...grouped.map(([kind, color]) => {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        const label = document.createElement("span");
+        label.style.display = "flex";
+        label.style.gap = "8px";
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = color;
+        label.append(swatch, document.createTextNode(kind));
+        item.append(label, document.createElement("span"));
+        return item;
+      }));
 
-      document.getElementById("rows").innerHTML = visible.map(component => `
-        <tr>
-          <td><span class="component-name"><span class="swatch" style="background:${colorFor(component)}"></span>${component.name}</span></td>
-          <td>${fmt.format(component.tokens)}</td>
-          <td>${pct(component.pct_window)}</td>
-          <td>${pct(component.pct_input)}</td>
-          <td><div class="bar"><span style="width:${Math.min(component.pct_input, 100)}%;background:${colorFor(component)}"></span></div></td>
-        </tr>
-      `).join("");
+      const rows = document.getElementById("rows");
+      rows.replaceChildren(...visible.map(component => {
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        const name = document.createElement("span");
+        name.className = "component-name";
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = colorFor(component);
+        name.append(swatch, document.createTextNode(component.name));
+        nameCell.append(name);
+
+        const tokensCell = document.createElement("td");
+        tokensCell.textContent = fmt.format(component.tokens);
+        const windowCell = document.createElement("td");
+        windowCell.textContent = pct(component.pct_window);
+        const inputCell = document.createElement("td");
+        inputCell.textContent = pct(component.pct_input);
+
+        const barCell = document.createElement("td");
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("span");
+        fill.style.width = `${Math.min(component.pct_input, 100)}%`;
+        fill.style.background = colorFor(component);
+        bar.append(fill);
+        barCell.append(bar);
+
+        row.append(nameCell, tokensCell, windowCell, inputCell, barCell);
+        return row;
+      }));
 
       const skillBudget = data.skills.pct_budget;
       document.getElementById("skillRing").style.setProperty("--skill-angle", `${Math.min(skillBudget, 140) * 3.6}deg`);
       document.getElementById("skillPct").textContent = pct(skillBudget);
-      document.getElementById("skillStats").innerHTML = `
-        ${fmt.format(data.skills.tokens)} skill tokens<br>
-        ${fmt.format(data.skills.budget_tokens)} token 2% budget<br>
-        ${pct(data.skills.pct_window)} of full window<br>
-        ${fmt.format(data.skills.entries)} available skill entries
-      `;
-      document.getElementById("disabled").innerHTML = data.skills.disabled.map(name => `<span class="pill">${name}</span>`).join("");
-      document.getElementById("source").innerHTML = `${data.rollout}<br>session ${data.session_id}<br>mtime ${data.rollout_mtime}`;
+      document.getElementById("skillStats").textContent = [
+        `${fmt.format(data.skills.tokens)} skill tokens`,
+        `${fmt.format(data.skills.budget_tokens)} token 2% budget`,
+        `${pct(data.skills.pct_window)} of full window`,
+        `${fmt.format(data.skills.entries)} available skill entries`
+      ].join("\n");
+      const disabled = document.getElementById("disabled");
+      disabled.replaceChildren(...data.skills.disabled.map(name => {
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = name;
+        return pill;
+      }));
+      document.getElementById("source").textContent = [
+        data.rollout,
+        `session ${data.session_id}`,
+        `mtime ${data.rollout_mtime}`
+      ].join("\n");
 
       const labels = visible.map(c => c.name);
       const values = visible.map(c => c.tokens);
