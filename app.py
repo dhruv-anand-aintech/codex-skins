@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import tiktoken
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -339,7 +339,7 @@ def context(session: str | None = Query(default=None), mock: bool = Query(defaul
         return mock_summary()
     path = path_for_session(session)
     if path is None:
-        return {"error": f"No matching Codex rollout found under {SESSION_ROOT}"}
+        raise HTTPException(status_code=404, detail=f"No matching Codex rollout found under {SESSION_ROOT}")
     return summarize_session(path)
 
 

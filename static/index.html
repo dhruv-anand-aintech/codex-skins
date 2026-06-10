@@ -543,6 +543,25 @@
       }
     }
 
+    function renderError(message) {
+      document.getElementById("status").textContent = message;
+      document.getElementById("inputUsed").textContent = "-";
+      document.getElementById("window").textContent = "-";
+      document.getElementById("remaining").textContent = "-";
+      document.getElementById("cached").textContent = "-";
+      document.getElementById("meter").replaceChildren();
+      document.getElementById("rows").replaceChildren();
+      document.getElementById("skillPct").textContent = "-";
+      document.getElementById("skillStats").textContent = "-";
+      document.getElementById("disabled").replaceChildren();
+      document.getElementById("source").textContent = message;
+      if (chart) {
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.update();
+      }
+    }
+
     function sessionLabel(session) {
       const started = session.started_at ? new Date(session.started_at).toLocaleString() : session.mtime;
       const cwd = session.cwd ? session.cwd.replace(`${location.origin}`, "") : "unknown cwd";
@@ -579,7 +598,12 @@
       if (isMock) params.set("mock", "true");
       const query = params.toString() ? `?${params}` : "";
       const res = await fetch(`/api/context${query}`, { cache: "no-store" });
-      render(await res.json());
+      const data = await res.json();
+      if (!res.ok || data.error || data.detail) {
+        renderError(data.detail || data.error || `Context request failed with ${res.status}`);
+        return;
+      }
+      render(data);
     }
 
     document.getElementById("sessionSelect").addEventListener("change", event => {
